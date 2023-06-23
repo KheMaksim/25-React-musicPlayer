@@ -1,10 +1,12 @@
 import { useState, useRef, ChangeEvent, useEffect } from 'react';
-import './css/App.css';
-import tracksList from './helpers/trackList';
-import formatTime from './helpers/formatTime';
-import btnLink from './helpers/btnLink';
+import tracksList from '../../helpers/trackList';
+import formatTime from '../../helpers/formatTime';
+import btnLink from '../../helpers/btnLink';
+import './MusicPlayer.css'
+import Button from '../../components/UI/Button/Button';
+import TrackBar from '../../components/TrackBar/TrackBar';
 
-const Player = () => {
+const MusicPlayer = () => {
 	const [tracks] = useState(tracksList);
 	const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 	const [currentTime, setCurrentTime] = useState(0);
@@ -12,12 +14,14 @@ const Player = () => {
 	const [playing, setPlaying] = useState(false);
 	const audioEl = useRef<HTMLAudioElement>(null);
 	const progressRef = useRef<HTMLDivElement>(null);
+
 	const updateProgress = (width: number): void => {
 		if (width >= 100 || !playing) return;
 		width++;
 		if (progressRef.current) progressRef.current.style.width = width + "%";
 		setTimeout(updateProgress, duration / 100 * 1000);
 	};
+
 	const onTimeUpdateHandler = (e: ChangeEvent<HTMLAudioElement>): void => {
 		const audioElement = e.target;
 		setCurrentTime(Math.floor(audioElement.currentTime));
@@ -51,16 +55,12 @@ const Player = () => {
 
 	const nextTrackHandler = (): void => {
 		currentTrackIndex < tracks.length - 1 ? setCurrentTrackIndex(currentTrackIndex + 1) : setCurrentTrackIndex(0);
-		setPlaying(false);
 		if (progressRef.current) progressRef.current.style.width = '0%';
-		setPlaying(true);
 	};
 
 	const prevTrackHandler = (): void => {
 		currentTrackIndex > 0 ? setCurrentTrackIndex(currentTrackIndex - 1) : setCurrentTrackIndex(tracks.length - 1);
-		setPlaying(false);
 		if (progressRef.current) progressRef.current.style.width = '0%';
-		setPlaying(true);
 	};
 
 	useEffect(() => {
@@ -70,50 +70,31 @@ const Player = () => {
 	}, [currentTime, duration])
 
 	return (
-		<div className='container'>
-			<h1>React <img className='logo' src="https://icons-for-free.com/iconfiles/png/512/logo+react+react+js+icon-1320184811840217251.png" alt="" /> Music</h1>
-			<div>
-				<img className='track__image' src={tracks[currentTrackIndex].imageSrc} />
-				<h2 className='track__name'>{tracks[currentTrackIndex].name}</h2>
-				<p className='track__author'>{tracks[currentTrackIndex].author}</p>
-				<div className="bar">
-					<p className="bar__timecode">{formatTime(currentTime)}</p>
-					<div id="progress">
-						<div id="greenProgress" ref={progressRef}></div>
-					</div>
-					<p className="bar__timecode">{isNaN(duration) ? "00:00" : formatTime(duration)}</p>
-					<audio ref={audioEl}
-						src={tracks[currentTrackIndex].src}
-						onTimeUpdate={onTimeUpdateHandler}
-						onCanPlay={(e: ChangeEvent<HTMLAudioElement>): void => {
-							e.target.play()
-						}} />
+		<div className="player__wrapper">
+			<div className='player__container'>
+				<h1 className='player__title'>React <img className='player__logo' src="https://icons-for-free.com/iconfiles/png/512/logo+react+react+js+icon-1320184811840217251.png" alt="logo" /> Music
+				</h1>
+				<TrackBar src={tracks[currentTrackIndex].imageSrc}
+					name={tracks[currentTrackIndex].name}
+					author={tracks[currentTrackIndex].name}
+					timecode={formatTime(currentTime)}
+					progressRef={progressRef}
+					durationCode={isNaN(duration) ? "00:00" : formatTime(duration)}
+					audioRef={audioEl}
+					audioSrc={tracks[currentTrackIndex].src}
+					onTimeUpdate={onTimeUpdateHandler}
+					autoPlay={playing} />
+				<div className="buttons">
+					<Button type='prev' onClickHandler={prevTrackHandler} src="https://cdn.icon-icons.com/icons2/741/PNG/512/back_icon-icons.com_63358.png" />
+					{playing ?
+						(<Button type='pause' onClickHandler={onPauseHandler} src={btnLink} />) :
+						(<Button type='play' onClickHandler={onPlayHandler} src={btnLink} text='Play' />)
+					}
+					<Button type='next' onClickHandler={nextTrackHandler} src='https://cdn.icon-icons.com/icons2/741/PNG/512/next_icon-icons.com_63384.png' />
 				</div>
-			</div>
-			<div className="buttons">
-				<button className="btn prev" onClick={prevTrackHandler}>
-					<img className='btn__image' src="https://cdn.icon-icons.com/icons2/741/PNG/512/back_icon-icons.com_63358.png" />
-				</button>
-				{playing ? (<button className="btn pause" onClick={onPauseHandler}>
-					<img className='btn__image' src={btnLink} />
-				</button>) : (<button className="btn play" onClick={onPlayHandler}>
-					<img className='btn__image' src={btnLink} />
-					Play
-				</button>)}
-				<button className="btn next" onClick={nextTrackHandler}>
-					<img className='btn__image' src="https://cdn.icon-icons.com/icons2/741/PNG/512/next_icon-icons.com_63384.png" />
-				</button>
 			</div>
 		</div>
 	);
 };
 
-const App = () => {
-	return (
-		<>
-			<Player />
-		</>
-	)
-}
-
-export default App
+export default MusicPlayer;
